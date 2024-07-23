@@ -20,8 +20,8 @@ public class UserController {
     /*
      * 登录接口
      * */
-    @PostMapping("/login")
-    public Result<String> login(String username, String password) {
+    @PostMapping("doLogin")
+    public Result<String> doLogin(String username, String password) {
         try {
             // 获取用户信息，判断用户是否存在
             User user = userService.getOne(new QueryWrapper<User>().eq("username", username));
@@ -31,7 +31,7 @@ public class UserController {
             if (user.getPassword().equals(password)) {
                 return Result.success("登录成功", user.getUserId());
             } else {
-                throw new CustomException("密码错误");
+                throw new CustomException("密码错误，请重新输入密码！");
             }
         } catch (CustomException ex) {
             return Result.error(400, ex.getMessage());
@@ -39,4 +39,6 @@ public class UserController {
             throw new RuntimeException("登录过程中发生错误: " + ex.getMessage());
         }
     }
+
+
 }
