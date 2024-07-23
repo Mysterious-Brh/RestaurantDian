@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>餐馆列表</title>
+    <!-- 引入 Bootstrap5 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.staticfile.net/twitter-bootstrap/5.1.1/css/bootstrap.min.css">
+    <!-- 引入 Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!--  引入 Echarts   -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- 引入 Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdn.staticfile.net/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>餐馆列表</h1>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody id="restaurantTableBody">
+        <!-- 数据将通过JavaScript填充 -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        axios.get('restaurants/getAllRestaurants')
+            .then(function (response) {
+                const restaurants = response.data;
+                const tableBody = document.getElementById('restaurantTableBody');
+                restaurants.forEach(function(restaurant) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${restaurant.restaurantId}</td>
+                    <td>${restaurant.restaurantName}</td>
+                    <td>${restaurant.address}</td>
+                    <td>${restaurant.description}</td>
+                `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(function (error) {
+                console.error('Error fetching restaurant data:', error);
+            });
+    });
+</script>
+</body>
+</html>
