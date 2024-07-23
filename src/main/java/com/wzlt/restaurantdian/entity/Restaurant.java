@@ -6,11 +6,11 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Data
-@TableName("restaurant")
 /*
-* 餐厅实体类
-* */
+ * 餐厅实体类
+ * */
+@Data
+@TableName("t_restaurant")
 public class Restaurant {
     /*
     * 餐馆id
