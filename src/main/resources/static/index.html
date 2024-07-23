@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <!-- 引入 Bootstrap5 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.staticfile.net/twitter-bootstrap/5.1.1/css/bootstrap.min.css">
+    <!-- 引入 Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!--  引入 Echarts   -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <!-- 引入 Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdn.staticfile.net/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>欢迎来到首页</h1>
+    <div id="user-info" class="mt-3"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const userId = localStorage.getItem('userId'); // 从 localStorage 获取用户ID
+        if (userId) {
+            document.getElementById('user-info').textContent = '用户ID: ' + userId;
+        } else {
+            document.getElementById('user-info').textContent = '未找到用户ID';
+        }
+    });
+</script>
+</body>
+</html>
