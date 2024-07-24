@@ -13,7 +13,7 @@ public class RestaurantController {
     @Autowired
     private RestaurantService restaurantService;
 
-    @GetMapping("getAllRestaurants")
+    @GetMapping("getRestaurants")
     public List<Restaurant> getAllRestaurants() {
         return restaurantService.list();
     }

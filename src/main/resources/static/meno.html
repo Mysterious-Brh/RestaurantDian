@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点餐菜单</title>
+    <!-- 引入 Bootstrap5 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.staticfile.net/twitter-bootstrap/5.1.1/css/bootstrap.min.css">
+    <!-- 引入 Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!--  引入 Echarts   -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <!-- 引入 Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdn.staticfile.net/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex: 1;
+            /* 预留导航栏空间 */
+            padding: 76px 20px 20px;
+        }
+        footer {
+            background-color: #f8f9fa;
+            padding: 20px 0;
+            text-align: center;
+        }
+        .menu-category {
+            margin-bottom: 20px;
+        }
+        .menu-item {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .menu-item img {
+            width: 100%;
+            height: auto;
+        }
+        .menu-item h5 {
+            margin-top: 10px;
+        }
+        .float-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+<!-- 导航栏 -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">点餐系统</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="index.html">首页</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">菜单</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="order.html">订单</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">联系</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- 主要内容区 -->
+<div class="container main-content">
+    <div class="row">
+        <!-- 面包屑导航 -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="meno.html">首页</a></li>
+                <li class="breadcrumb-item active" aria-current="page" id="breadcrumb-category">全部</li>
+            </ol>
+        </nav>
+        <!-- 菜单分类 -->
+        <div class="col-md-2">
+            <div class="list-group" id="category-list">
+                <a href="#" class="list-group-item list-group-item-action active" data-category="全部">全部</a>
+                <a href="#" class="list-group-item list-group-item-action" data-category="早餐">早餐</a>
+                <a href="#" class="list-group-item list-group-item-action" data-category="午餐">午餐</a>
+                <a href="#" class="list-group-item list-group-item-action" data-category="晚餐">晚餐</a>
+            </div>
+        </div>
+        <!-- 菜单项 -->
+        <div class="col-md-10" id="menu-items">
+            <!-- 菜单内容将由 JavaScript 动态生成 -->
+        </div>
+    </div>
+</div>
+
+<!-- 悬浮按钮 -->
+<button type="button" class="btn btn-primary float-button" data-bs-toggle="modal" data-bs-target="#orderModal">
+    开始点餐
+</button>
+
+<!-- 模态框 -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderModalLabel">输入房号</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="roomForm">
+                    <div class="mb-3">
+                        <label for="roomNumber" class="form-label">房号</label>
+                        <input type="text" class="form-control" id="roomNumber" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页脚 -->
+<footer class="mt-auto">
+    <div class="container">
+        <p>&copy; 2024 点餐系统. 保留所有权利.</p>
+    </div>
+</footer>
+
+<!-- 引入 Bootstrap5 核心 JS 文件 -->
+<script src="https://cdn.staticfile.net/twitter-bootstrap/5.1.1/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryList = document.getElementById('category-list');
+        const menuItems = document.getElementById('menu-items');
+        const breadcrumbCategory = document.getElementById('breadcrumb-category');
+        const roomForm = document.getElementById('roomForm');
+
+        // 获取初始菜单数据
+        fetchMenuData('全部');
+
+        // 绑定分类点击事件
+        categoryList.addEventListener('click', function(e) {
+            if (e.target && e.target.matches('.list-group-item')) {
+                e.preventDefault();
+                const category = e.target.getAttribute('data-category');
+                fetchMenuData(category);
+                // 更新面包屑导航
+                breadcrumbCategory.textContent = category;
+                // 更新分类选中状态
+                document.querySelectorAll('.list-group-item').forEach(function(item) {
+                    item.classList.remove('active');
+                });
+                e.target.classList.add('active');
+            }
+        });
+
+        // 从后端获取菜单数据的函数
+        function fetchMenuData(category) {
+            axios.get('/api/menu', {
+                params: { category: category }
+            })
+                .then(function(response) {
+                    const data = response.data;
+                    renderMenuItems(data);
+                })
+                .catch(function(error) {
+                    console.error('获取菜单数据失败:', error);
+                });
+        }
+
+        // 渲染菜单项的函数
+        function renderMenuItems(data) {
+            menuItems.innerHTML = '';
+            data.forEach(function(item) {
+                const menuItem = `
+                        <div class="col-md-3 menu-item">
+                            <img src="${item.image}" alt="${item.name}" class="img-fluid">
+                            <h5>${item.name}</h5>
+                        </div>
+                    `;
+                menuItems.insertAdjacentHTML('beforeend', menuItem);
+            });
+        }
+
+        // 处理房号提交表单
+        roomForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const roomNumber = document.getElementById('roomNumber').value;
+            // 在此处处理房号输入逻辑，例如发送到后端或保存到本地存储
+            console.log('房号:', roomNumber);
+            // 隐藏模态框
+            const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+            orderModal.hide();
+        });
+    });
+</script>
+</body>
+</html>

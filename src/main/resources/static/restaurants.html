@@ -33,7 +33,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        axios.get('restaurants/getAllRestaurants')
+        axios.get('restaurants/getRestaurants')
             .then(function (response) {
                 const restaurants = response.data;
                 const tableBody = document.getElementById('restaurantTableBody');

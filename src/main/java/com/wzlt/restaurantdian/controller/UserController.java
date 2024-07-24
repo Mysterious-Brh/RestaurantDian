@@ -3,11 +3,13 @@ package com.wzlt.restaurantdian.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.wzlt.restaurantdian.common.Result;
 import com.wzlt.restaurantdian.entity.User;
-import com.wzlt.restaurantdian.exception.CustomException;
 import com.wzlt.restaurantdian.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -17,28 +19,23 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    /*
-     * 登录接口
-     * */
-    @PostMapping("doLogin")
-    public Result<String> doLogin(String username, String password) {
+    @GetMapping("/getUserById")
+    public ResponseEntity<Result<User>> getUserById(@RequestParam String userId) {
         try {
-            // 获取用户信息，判断用户是否存在
-            User user = userService.getOne(new QueryWrapper<User>().eq("username", username));
-            if (user == null) {
-                throw new CustomException("用户不存在");
-            }
-            if (user.getPassword().equals(password)) {
-                return Result.success("登录成功", user.getUserId());
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("user_id", userId);
+            User user = userService.getOne(queryWrapper);
+            if (user != null) {
+                return ResponseEntity.ok(Result.success("获取用户成功", user));
             } else {
-                throw new CustomException("密码错误，请重新输入密码！");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "用户不存在"));
             }
-        } catch (CustomException ex) {
-            return Result.error(400, ex.getMessage());
         } catch (Exception ex) {
-            throw new RuntimeException("登录过程中发生错误: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.error(500, "获取用户过程中发生错误: " + ex.getMessage()));
         }
     }
+
+
 
 
 }
