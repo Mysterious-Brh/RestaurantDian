@@ -2,6 +2,7 @@ package com.wzlt.restaurantdian.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.wzlt.restaurantdian.common.Result;
+import com.wzlt.restaurantdian.dto.FoodDto;
 import com.wzlt.restaurantdian.entity.Food;
 import com.wzlt.restaurantdian.service.FoodService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,20 +14,49 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/foods/")
+@RequestMapping("/")
 public class FoodController {
     @Autowired
     private FoodService foodService;
+
+    /*
+     * Food转换FoodDto
+     * */
+    private ResponseEntity<Result<List<FoodDto>>> getResultResponseEntity(List<Food> foods) {
+        List<FoodDto> foodDtos = foods.stream().map(food -> {
+            FoodDto dto = new FoodDto();
+            dto.setFoodName(food.getFoodName());
+            dto.setFoodImageNail1(food.getFoodImageNail1());
+            return dto;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(Result.success("获取食品列表成功", foodDtos));
+    }
+
     /*
      * 获取所有食品
      */
-    @GetMapping("/getFoods")
-    public ResponseEntity<Result<List<Food>>> getAllFoods(@RequestParam Integer restaurantId) {
+    @GetMapping("getFoods")
+    public ResponseEntity<Result<List<FoodDto>>> getAllFoods() {
+        Integer restaurantId = 1;
         try {
             List<Food> foods = foodService.list(new QueryWrapper<Food>().eq("restaurant_id", restaurantId));
-            return ResponseEntity.ok(Result.success("获取食品列表成功", foods));
+            return getResultResponseEntity(foods);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.error(500, "获取食品列表过程中发生错误: " + ex.getMessage()));
+        }
+    }
+
+    /*
+     * 根据食品类型获取食品
+     */
+    @GetMapping("getFoodsByTypeId")
+    public ResponseEntity<Result<List<FoodDto>>> getFoodsByType(@RequestParam Integer foodTypeId) {
+        try {
+            List<Food> foods = foodService.list(new QueryWrapper<Food>().eq("food_type_id", foodTypeId));
+            return getResultResponseEntity(foods);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.error(500, "获取食品列表过程中发生错误: " + ex.getMessage()));
         }

@@ -25,21 +25,19 @@
             /* 预留导航栏空间 */
             padding: 76px 20px 20px;
         }
-        footer {
-            background-color: #f8f9fa;
-            padding: 20px 0;
-            text-align: center;
-        }
         .menu-category {
             margin-bottom: 20px;
         }
         .menu-item {
             text-align: center;
             margin-bottom: 20px;
+            width: 33.33%; /* 每行三个图片 */
+            box-sizing: border-box;
         }
+
         .menu-item img {
-            width: 100%;
-            height: auto;
+            width: 100%; /* 确保图片自适应容器宽度 */
+            height: auto; /* 保持图片比例 */
         }
         .menu-item h5 {
             margin-top: 10px;
@@ -56,7 +54,7 @@
 <!-- 导航栏 -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">点餐系统</a>
+        <a class="navbar-brand" href="#">智慧点餐系统</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -66,7 +64,7 @@
                     <a class="nav-link active" aria-current="page" href="index.html">首页</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">菜单</a>
+                    <a class="nav-link" href="meno.html">菜单</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link active" href="order.html">订单</a>
@@ -92,10 +90,10 @@
         <!-- 菜单分类 -->
         <div class="col-md-2">
             <div class="list-group" id="category-list">
-                <a href="#" class="list-group-item list-group-item-action active" data-category="全部">全部</a>
-                <a href="#" class="list-group-item list-group-item-action" data-category="早餐">早餐</a>
-                <a href="#" class="list-group-item list-group-item-action" data-category="午餐">午餐</a>
-                <a href="#" class="list-group-item list-group-item-action" data-category="晚餐">晚餐</a>
+                <a href="#" class="list-group-item list-group-item-action active" data-category="全部" data-type-id="0">全部</a>
+                <a href="#" class="list-group-item list-group-item-action" data-category="早餐" data-type-id="1">早餐</a>
+                <a href="#" class="list-group-item list-group-item-action" data-category="午餐" data-type-id="2">午餐</a>
+                <a href="#" class="list-group-item list-group-item-action" data-category="晚餐" data-type-id="3">晚餐</a>
             </div>
         </div>
         <!-- 菜单项 -->
@@ -131,12 +129,6 @@
     </div>
 </div>
 
-<!-- 页脚 -->
-<footer class="mt-auto">
-    <div class="container">
-        <p>&copy; 2024 点餐系统. 保留所有权利.</p>
-    </div>
-</footer>
 
 <!-- 引入 Bootstrap5 核心 JS 文件 -->
 <script src="https://cdn.staticfile.net/twitter-bootstrap/5.1.1/js/bootstrap.bundle.min.js"></script>
@@ -148,14 +140,15 @@
         const roomForm = document.getElementById('roomForm');
 
         // 获取初始菜单数据
-        fetchMenuData('全部');
+        fetchMenuData(0);
 
         // 绑定分类点击事件
         categoryList.addEventListener('click', function(e) {
             if (e.target && e.target.matches('.list-group-item')) {
                 e.preventDefault();
                 const category = e.target.getAttribute('data-category');
-                fetchMenuData(category);
+                const typeId = e.target.getAttribute('data-type-id');
+                fetchMenuData(typeId);
                 // 更新面包屑导航
                 breadcrumbCategory.textContent = category;
                 // 更新分类选中状态
@@ -167,12 +160,17 @@
         });
 
         // 从后端获取菜单数据的函数
-        function fetchMenuData(category) {
-            axios.get('/api/menu', {
-                params: { category: category }
-            })
+        function fetchMenuData(foodTypeId) {
+            const url = foodTypeId === "0" ? '/getFoods' : '/getFoodsByTypeId';
+            const params = foodTypeId === "0" ? {} : { foodTypeId: foodTypeId };
+
+            axios.get(url, { params: params })
                 .then(function(response) {
-                    const data = response.data;
+                    console.log(response.data);// 检查后端返回的数据情况
+                    const data = response.data.data.map(item => ({
+                        name: item.foodName,
+                        image: `/images/${item.foodImageNail1}`
+                    }));
                     renderMenuItems(data);
                 })
                 .catch(function(error) {
@@ -183,13 +181,14 @@
         // 渲染菜单项的函数
         function renderMenuItems(data) {
             menuItems.innerHTML = '';
+            console.log(data);
             data.forEach(function(item) {
                 const menuItem = `
-                        <div class="col-md-3 menu-item">
-                            <img src="${item.image}" alt="${item.name}" class="img-fluid">
-                            <h5>${item.name}</h5>
-                        </div>
-                    `;
+                    <div class="col-md-3 menu-item">
+                        <img src="${item.image}" alt="${item.name}" class="img-fluid">
+                        <h5>${item.name}</h5>
+                    </div>
+                `;
                 menuItems.insertAdjacentHTML('beforeend', menuItem);
             });
         }
