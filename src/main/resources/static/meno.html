@@ -29,18 +29,24 @@
             margin-bottom: 20px;
         }
         .menu-item {
-            text-align: center;
+            width: 23%; /* 每行四个卡片，并留有空隙 */
             margin-bottom: 20px;
-            width: 33.33%; /* 每行三个图片 */
             box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fff;
         }
-
         .menu-item img {
-            width: 100%; /* 确保图片自适应容器宽度 */
-            height: auto; /* 保持图片比例 */
+            border-radius: 4px;
         }
         .menu-item h5 {
-            margin-top: 10px;
+            margin: 0;
+            font-size: 16px;
+        }
+        .menu-item .btn {
+            padding: 2px 6px;
+            font-size: 14px;
         }
         .float-button {
             position: fixed;
@@ -182,16 +188,35 @@
         function renderMenuItems(data) {
             menuItems.innerHTML = '';
             console.log(data);
-            data.forEach(function(item) {
+
+            const itemsPerRow = 4;
+            let rowDiv;
+
+            data.forEach(function(item, index) {
+                if (index % itemsPerRow === 0) {
+                    rowDiv = document.createElement('div');
+                    rowDiv.classList.add('d-flex', 'mb-3', 'justify-content-between'); // Bootstrap classes for horizontal layout
+                    menuItems.appendChild(rowDiv);
+                }
                 const menuItem = `
-                    <div class="col-md-3 menu-item">
-                        <img src="${item.image}" alt="${item.name}" class="img-fluid">
-                        <h5>${item.name}</h5>
+            <div class="card menu-item">
+                <div class="d-flex align-items-start">
+                    <img src="${item.image}" alt="${item.name}" class="img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
+                    <div class="ms-3 flex-grow-1">
+                        <h5 class="card-title">${item.name}</h5>
+                        <div class="d-flex align-items-center mt-2">
+                            <button class="btn btn-outline-secondary btn-sm">-</button>
+                            <span class="mx-2">1</span>
+                            <button class="btn btn-outline-secondary btn-sm">+</button>
+                        </div>
                     </div>
-                `;
-                menuItems.insertAdjacentHTML('beforeend', menuItem);
+                </div>
+            </div>
+        `;
+                rowDiv.insertAdjacentHTML('beforeend', menuItem);
             });
         }
+
 
         // 处理房号提交表单
         roomForm.addEventListener('submit', function(e) {
