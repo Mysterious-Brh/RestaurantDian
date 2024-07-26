@@ -25,9 +25,6 @@
             /* 预留导航栏空间 */
             padding: 76px 20px 20px;
         }
-        .menu-category {
-            margin-bottom: 20px;
-        }
         .menu-item {
             width: 23%; /* 每行四个卡片，并留有空隙 */
             margin-bottom: 20px;
@@ -53,6 +50,30 @@
             bottom: 20px;
             right: 20px;
             z-index: 1000;
+        }
+        .modal-content {
+            background: transparent;
+            border: none;
+        }
+        .modal-header {
+            background: white;
+            border-radius: 8px 8px 0 0;
+        }
+        .modal-body {
+            background: white;
+            border-radius: 0 0 8px 8px;
+        }
+        .room-card {
+            width: 60px;
+            text-align: center;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .modal-dialog {
+            position: absolute;
+            bottom: 70px; /* 位置调整，确保与按钮有10px间距 */
+            right: 20px; /* 与按钮右对齐 */
+            margin: 0;
         }
     </style>
 </head>
@@ -96,7 +117,7 @@
         <!-- 菜单分类 -->
         <div class="col-md-2">
             <div class="list-group" id="category-list">
-                <a href="#" class="list-group-item list-group-item-action active" data-category="全部" data-type-id="0">全部</a>
+                <a href="#" class="list-group-item list-group-item-action " data-category="全部" data-type-id="0">全部</a>
                 <a href="#" class="list-group-item list-group-item-action" data-category="早餐" data-type-id="1">早餐</a>
                 <a href="#" class="list-group-item list-group-item-action" data-category="午餐" data-type-id="2">午餐</a>
                 <a href="#" class="list-group-item list-group-item-action" data-category="晚餐" data-type-id="3">晚餐</a>
@@ -110,25 +131,26 @@
 </div>
 
 <!-- 悬浮按钮 -->
-<button type="button" class="btn btn-primary float-button" data-bs-toggle="modal" data-bs-target="#orderModal">
+<button type="button" class="btn btn-primary float-button" data-bs-toggle="modal" data-bs-target="#tableModal" id="orderButton">
     开始点餐
 </button>
 
-<!-- 模态框 -->
-<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="orderModalLabel">输入房号</h5>
+<!-- 输入房号模态框 -->
+<div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true" style="background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog" id="modalDialog">
+        <div class="modal-content" style="background: transparent; border: none;">
+            <div class="modal-header" style="background: transparent; border-radius: 8px 8px 0 0;">
+                <h5 class="modal-title" id="tableModalLabel" style="color: white;">选择或输入房号</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="background: transparent; border-radius: 0 0 8px 8px;">
                 <form id="roomForm">
                     <div class="mb-3">
-                        <label for="roomNumber" class="form-label">房号</label>
-                        <input type="text" class="form-control" id="roomNumber" required>
+                        <label for="roomNumber" class="form-label" style="color: white;">房号</label>
+                        <input type="text" class="form-control" id="roomNumber" placeholder="选择或输入房号" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">提交</button>
+                    <div id="roomCards" class="d-flex flex-wrap justify-content-start"></div>
+                    <button type="submit" class="btn btn-primary mt-3">提交</button>
                 </form>
             </div>
         </div>
@@ -144,9 +166,68 @@
         const menuItems = document.getElementById('menu-items');
         const breadcrumbCategory = document.getElementById('breadcrumb-category');
         const roomForm = document.getElementById('roomForm');
+        const roomCards = document.getElementById('roomCards');
+        const tableModal = new bootstrap.Modal(document.getElementById('tableModal'));
+        const orderButton = document.getElementById('orderButton');
+        const modalDialog = document.getElementById('modalDialog');
 
-        // 获取初始菜单数据
-        fetchMenuData(0);
+        // 删除初始菜单数据获取的代码
+        // fetchMenuData(0);
+
+        // 根据当前时间获取推荐菜品
+        function showRecommendedDishes() {
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 获取当前星期几
+
+            axios.get('/getRecommendFoods', { params: { dayOfWeek } })
+                .then(function(response) {
+                    console.log(response.data); // 检查后端返回的数据情况
+                    const data = response.data.data.map(item => ({
+                        name: item.foodName,
+                        image: `/images/${item.foodImage}` // 假设菜品图像路径为 /images/菜品图片
+                    }));
+                    renderMenuItems(data);
+                })
+                .catch(function(error) {
+                    console.error('获取推荐菜品数据失败:', error);
+                });
+        }
+
+        // 渲染菜单项的函数
+        function renderMenuItems(data) {
+            menuItems.innerHTML = '';
+            console.log(data);
+
+            const itemsPerRow = 4;
+            let rowDiv;
+
+            data.forEach(function(item, index) {
+                if (index % itemsPerRow === 0) {
+                    rowDiv = document.createElement('div');
+                    rowDiv.classList.add('d-flex', 'mb-3', 'justify-content-between'); // Bootstrap classes for horizontal layout
+                    menuItems.appendChild(rowDiv);
+                }
+                const menuItem = `
+            <div class="card menu-item">
+                <div class="d-flex align-items-start">
+                    <img src="${item.image}" alt="${item.name}" class="img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
+                    <div class="ms-3 flex-grow-1">
+                        <h5 class="card-title">${item.name}</h5>
+                        <div class="d-flex align-items-center mt-2">
+                            <button class="btn btn-outline-secondary btn-sm">-</button>
+                            <span class="mx-2">1</span>
+                            <button class="btn btn-outline-secondary btn-sm">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+                rowDiv.insertAdjacentHTML('beforeend', menuItem);
+            });
+        }
+
+        // 展示推荐菜品
+        showRecommendedDishes();
 
         // 绑定分类点击事件
         categoryList.addEventListener('click', function(e) {
@@ -184,51 +265,64 @@
                 });
         }
 
-        // 渲染菜单项的函数
-        function renderMenuItems(data) {
-            menuItems.innerHTML = '';
-            console.log(data);
-
-            const itemsPerRow = 4;
-            let rowDiv;
-
-            data.forEach(function(item, index) {
-                if (index % itemsPerRow === 0) {
-                    rowDiv = document.createElement('div');
-                    rowDiv.classList.add('d-flex', 'mb-3', 'justify-content-between'); // Bootstrap classes for horizontal layout
-                    menuItems.appendChild(rowDiv);
-                }
-                const menuItem = `
-            <div class="card menu-item">
-                <div class="d-flex align-items-start">
-                    <img src="${item.image}" alt="${item.name}" class="img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
-                    <div class="ms-3 flex-grow-1">
-                        <h5 class="card-title">${item.name}</h5>
-                        <div class="d-flex align-items-center mt-2">
-                            <button class="btn btn-outline-secondary btn-sm">-</button>
-                            <span class="mx-2">1</span>
-                            <button class="btn btn-outline-secondary btn-sm">+</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-                rowDiv.insertAdjacentHTML('beforeend', menuItem);
-            });
-        }
-
-
         // 处理房号提交表单
         roomForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const roomNumber = document.getElementById('roomNumber').value;
-            // 在此处处理房号输入逻辑，例如发送到后端或保存到本地存储
+            // 保存到浏览器
+            localStorage.setItem('roomNumber', roomNumber);
             console.log('房号:', roomNumber);
             // 隐藏模态框
-            const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
-            orderModal.hide();
+            tableModal.hide();
+        });
+
+        // 从后端获取房号数据的函数
+        function fetchRoomNumbers() {
+            axios.get('/tables/getAllTableName')
+                .then(function(response) {
+                    console.log(response.data);// 检查后端返回的数据情况
+                    renderRoomNumbers(response.data.data);
+                })
+                .catch(function(error) {
+                    console.error('获取房号数据失败:', error);
+                });
+        }
+
+        // 渲染房号卡片的函数
+        function renderRoomNumbers(roomNumbers) {
+            roomCards.innerHTML = '';
+            roomNumbers.forEach(function(roomNumber) {
+                const roomCard = `
+            <div class="card room-card m-2" style="width: 60px; text-align: center; cursor: pointer;">
+                <div class="card-body p-2">
+                    ${roomNumber}
+                </div>
+            </div>
+        `;
+                roomCards.insertAdjacentHTML('beforeend', roomCard);
+            });
+
+            // 绑定房号卡片点击事件
+            document.querySelectorAll('.room-card').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    document.getElementById('roomNumber').value = this.textContent.trim();
+                });
+            });
+        }
+
+        // 显示模态框时获取房号数据
+        document.getElementById('tableModal').addEventListener('show.bs.modal', fetchRoomNumbers);
+
+        // 确保模态框在按钮上方10px位置
+        orderButton.addEventListener('click', function() {
+            const buttonRect = orderButton.getBoundingClientRect();
+            modalDialog.style.bottom = `${window.innerHeight - buttonRect.top + 10}px`;
+            modalDialog.style.right = `${window.innerWidth - buttonRect.right}px`;
         });
     });
+
+
+
 </script>
 </body>
 </html>
