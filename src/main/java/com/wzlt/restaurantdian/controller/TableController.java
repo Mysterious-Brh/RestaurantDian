@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/tables/")
+@RequestMapping("/")
 public class TableController {
     @Autowired
     private TableService tableService;
 
     // 获取所有桌号
-    @GetMapping("/getAllTableName")
+    @GetMapping("getAllTableName")
     public ResponseEntity<Result<String[]>> getAllTableName() {
         Integer restaurantId = 1;
         try {
