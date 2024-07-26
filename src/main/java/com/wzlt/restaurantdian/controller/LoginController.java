@@ -37,11 +37,10 @@ public class LoginController {
                 session.setAttribute("user", user);
                 return ResponseEntity.ok(Result.success("登录成功", user.getUsername()));
             } else {
-                throw new CustomException("密码错误，请重新输入密码！");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.error(400, "用户名/密码错误，请重新输入！"));
             }
-        } catch (CustomException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.error(400, ex.getMessage()));
-        } catch (Exception ex) {
+        }
+         catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.error(500, "登录过程中发生错误: " + ex.getMessage()));
         }
     }
