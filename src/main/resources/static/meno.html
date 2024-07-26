@@ -171,9 +171,6 @@
         const orderButton = document.getElementById('orderButton');
         const modalDialog = document.getElementById('modalDialog');
 
-        // 删除初始菜单数据获取的代码
-        // fetchMenuData(0);
-
         // 根据当前时间获取推荐菜品
         function showRecommendedDishes() {
             const today = new Date();
@@ -184,7 +181,7 @@
                     console.log(response.data); // 检查后端返回的数据情况
                     const data = response.data.data.map(item => ({
                         name: item.foodName,
-                        image: `/images/${item.foodImage}` // 假设菜品图像路径为 /images/菜品图片
+                        image: `/images/${item.foodImageNail1}` // 假设菜品图像路径为 /images/菜品图片
                     }));
                     renderMenuItems(data);
                 })
@@ -198,17 +195,13 @@
             menuItems.innerHTML = '';
             console.log(data);
 
-            const itemsPerRow = 4;
-            let rowDiv;
+            const rowDiv = document.createElement('div');
+            rowDiv.classList.add('d-flex', 'mb-3', 'flex-wrap', 'justify-content-start'); // Bootstrap classes for horizontal layout
+            menuItems.appendChild(rowDiv);
 
-            data.forEach(function(item, index) {
-                if (index % itemsPerRow === 0) {
-                    rowDiv = document.createElement('div');
-                    rowDiv.classList.add('d-flex', 'mb-3', 'justify-content-between'); // Bootstrap classes for horizontal layout
-                    menuItems.appendChild(rowDiv);
-                }
+            data.forEach(function(item) {
                 const menuItem = `
-            <div class="card menu-item">
+            <div class="card menu-item" style="flex: 0 0 23%; margin-right: 1%; margin-bottom: 20px;">
                 <div class="d-flex align-items-start">
                     <img src="${item.image}" alt="${item.name}" class="img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
                     <div class="ms-3 flex-grow-1">
@@ -225,6 +218,7 @@
                 rowDiv.insertAdjacentHTML('beforeend', menuItem);
             });
         }
+
 
         // 展示推荐菜品
         showRecommendedDishes();
@@ -278,7 +272,7 @@
 
         // 从后端获取房号数据的函数
         function fetchRoomNumbers() {
-            axios.get('/tables/getAllTableName')
+            axios.get('/getAllTableName')
                 .then(function(response) {
                     console.log(response.data);// 检查后端返回的数据情况
                     renderRoomNumbers(response.data.data);
